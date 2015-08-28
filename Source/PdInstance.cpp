@@ -9,7 +9,10 @@
 
 extern "C"
 {
-    EXTERN  void pd_init(void);
+#include "m_pd.h"
+#include "m_imp.h"
+EXTERN  void pd_init(void);
+#include "pdugen.h"
 }
 
 namespace pd
@@ -58,6 +61,7 @@ namespace pd
             initialized = 1;
             libpd_loadcream();
             
+            post("dsp system initialized.");
             int indev[MAXAUDIOINDEV], inch[MAXAUDIOINDEV],
             outdev[MAXAUDIOOUTDEV], outch[MAXAUDIOOUTDEV];
             indev[0] = outdev[0] = DEFAULTAUDIODEV;
@@ -179,7 +183,7 @@ namespace pd
                 memcpy(sys_soundin+j*DEFDACBLKSIZE, inputs[j]+i, DEFDACBLKSIZE * sizeof(t_sample));
             }
             memset(sys_soundout, 0, DEFDACBLKSIZE * sizeof(t_sample) * nouts);
-            sched_tick();
+            pdinstance_sched_tick(m_internal->instance);
             for(int j = 0; j < nouts; j++)
             {
                 memcpy(outputs[j]+i, sys_soundout+j*DEFDACBLKSIZE, DEFDACBLKSIZE * sizeof(t_sample));
