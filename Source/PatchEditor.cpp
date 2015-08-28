@@ -140,7 +140,7 @@ m_color_bd(Colours::darkgrey)
     d->setAlwaysOnTop(true);
     d->setRadioGroupId(1);
     d->setImages(&image, &image2, &image3);
-    d->setBounds(2, 2, 16, 16);
+    d->setBounds(3, 3, 16, 16);
     d->setColour(TextButton::buttonColourId, Colours::transparentBlack);
     d->setColour(TextButton::buttonOnColourId, Colours::black);
     d->setColour(TextButton::textColourOffId, Colours::white);
@@ -154,7 +154,7 @@ m_color_bd(Colours::darkgrey)
     t->setColour(TextButton::buttonColourId, Colours::transparentBlack);
     t->setColour(TextButton::buttonOnColourId, Colours::grey);
     t->setColour(TextButton::textColourOffId, Colours::white);
-    t->setBounds(20, 1, 40, 19);
+    t->setBounds(20, 2, 40, 18);
     t->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     m_buttons.add(t);
     
@@ -165,7 +165,7 @@ m_color_bd(Colours::darkgrey)
     t->setColour(TextButton::buttonColourId, Colours::transparentBlack);
     t->setColour(TextButton::buttonOnColourId, Colours::grey);
     t->setColour(TextButton::textColourOffId, Colours::white);
-    t->setBounds(60, 1, 40, 19);
+    t->setBounds(60, 2, 40, 18);
     t->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     m_buttons.add(t);
     
@@ -176,7 +176,7 @@ m_color_bd(Colours::darkgrey)
     t->setColour(TextButton::buttonColourId, Colours::transparentBlack);
     t->setColour(TextButton::buttonOnColourId, Colours::grey);
     t->setColour(TextButton::textColourOffId, Colours::white);
-    t->setBounds(100, 1, 55, 19);
+    t->setBounds(100, 2, 55, 18);
     t->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     m_buttons.add(t);
 
@@ -187,14 +187,14 @@ m_color_bd(Colours::darkgrey)
     t->setColour(TextButton::buttonColourId, Colours::transparentBlack);
     t->setColour(TextButton::buttonOnColourId, Colours::grey);
     t->setColour(TextButton::textColourOffId, Colours::white);
-    t->setBounds(155, 1, 35, 19);
+    t->setBounds(155, 2, 35, 18);
     t->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
     m_buttons.add(t);
     
     Component::setWantsKeyboardFocus(true);
     m_processor.addListener(this);
+    setSize(604, 424);
     patchChanged();
-    setSize(600, 420);
 }
 
 PatchEditor::~PatchEditor()
@@ -206,8 +206,8 @@ void PatchEditor::paint(Graphics& g)
 {
     g.fillAll(m_color_bg);
     g.setColour(m_color_bd);
-    g.drawRect(getBounds().withZeroOrigin());
-    g.drawLine(0.f, 20.f, getWidth(), 20.f);
+    g.drawRect(getBounds().withZeroOrigin(), 2.f);
+    g.drawLine(0.f, 21.f, getWidth(), 21.f, 2.f);
     const Patch patch = m_processor.getPatch();
     if(patch)
     {
@@ -284,12 +284,13 @@ void PatchEditor::patchChanged()
                     ObjectEditor* inte = m_objects.add(new ObjectEditor(*this, it));
                     const std::array<int,2> pos = it.getPosition();
                     const int offset = it.getBorderSize();
-                    inte->setTopLeftPosition(pos[0] - ref[0] - offset, pos[1] - ref[1] - offset + 20.);
+                    inte->setTopLeftPosition(pos[0] - ref[0] - offset, pos[1] - ref[1] - offset + 22.);
                     addChildComponent(inte);
                 }
             }
             m_color_bg = tojColor(camo.getBackgroundColor());
             m_color_bd = tojColor(camo.getBorderColor());
+            setSize(camo.getWidth() + 4, camo.getHeight() + 26.);
         }
     }
     const MessageManagerLock mmLock;
