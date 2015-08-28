@@ -7,6 +7,10 @@
 #include "PdPatch.h"
 #include "PdObject.h"
 #include "PdGui.h"
+extern "C"
+{
+#include "c_pd.h"
+}
 
 #include <iomanip>
 
@@ -28,13 +32,13 @@ namespace pd
         {
             std::lock_guard<std::mutex> guard(instance.s_mutex);
             pd_setinstance(instance.m_internal->instance);
-            canvas = reinterpret_cast<t_canvas*>(glob_evalfile(NULL, gensym(name.c_str()), gensym(path.c_str())));
+            canvas = pdinstance_newcanvas(gensym(name.c_str()), gensym(path.c_str()));
         }
         else if(!name.empty())
         {
             std::lock_guard<std::mutex> guard(instance.s_mutex);
             pd_setinstance(instance.m_internal->instance);
-            canvas = reinterpret_cast<t_canvas*>(glob_evalfile(NULL, gensym(name.c_str()), gensym("")));
+            canvas = pdinstance_newcanvas(gensym(name.c_str()), gensym(""));
         }
     }
     

@@ -37,6 +37,8 @@ namespace pd
             std::set<Patch>     patcher;
             std::atomic<size_t> counter;
             std::string         name;
+            t_sample*           inputs;
+            t_sample*           outputs;
             
             Internal(std::string const& _name);
             ~Internal();

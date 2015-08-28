@@ -13,6 +13,7 @@ extern "C"
 #include "m_imp.h"
 EXTERN  void pd_init(void);
 #include "pdugen.h"
+#include "c_pd.h"
 }
 
 namespace pd
@@ -26,54 +27,21 @@ namespace pd
     std::string Instance::s_console;
     
     Instance::Internal::Internal(std::string const& _name) :
-    instance(nullptr),
+    instance(pdinstance_new()),
     counter(1),
-    name(_name)
+    name(_name),
+    inputs(nullptr),
+    outputs(nullptr)
     {
-        std::lock_guard<std::mutex> guard(s_mutex);
+        cpd_initialize((t_method)print, true, 2, true, false, false, false);
         static int initialized = 0;
         if(!initialized)
         {
-            signal(SIGFPE, SIG_IGN);
-            sys_printhook = (t_printhook)print;
-            sys_soundin = NULL;
-            sys_soundout = NULL;
-            // are all these settings necessary?
-            sys_schedblocksize = DEFDACBLKSIZE;
-            sys_externalschedlib = 0;
-            sys_printtostderr = 0;
-            sys_usestdpath = 0;
-            sys_debuglevel = 1;
-            sys_verbose = 1;
-            sys_noloadbang = 0;
-            sys_nogui = 1;
-            sys_hipriority = 0;
-            sys_nmidiin = 0;
-            sys_nmidiout = 0;
-            sys_init_fdpoll();
-#ifdef HAVE_SCHED_TICK_ARG
-            sys_time = 0;
-#endif
-            pd_init();
-            sys_set_audio_api(API_DUMMY);
-            sys_searchpath = NULL;
-            s_sample_rate  = 0;
-            initialized = 1;
+            cpd_initialize_dsp();
             libpd_loadcream();
-            
-            post("dsp system initialized.");
-            int indev[MAXAUDIOINDEV], inch[MAXAUDIOINDEV],
-            outdev[MAXAUDIOOUTDEV], outch[MAXAUDIOOUTDEV];
-            indev[0] = outdev[0] = DEFAULTAUDIODEV;
-            inch[0] = s_max_channels;
-            outch[0] = s_max_channels;
-            sys_set_audio_settings(1, indev, 1, inch,
-                                   1, outdev, 1, outch, 44100, -1, 1, DEFDACBLKSIZE);
-            sched_set_using_audio(SCHED_AUDIO_CALLBACK);
-            sys_reopen_audio();
             s_sample_rate = sys_getsr();
+            initialized = 1;
         }
-        instance = pdinstance_new();
     }
     
     Instance::Internal::~Internal()
@@ -147,9 +115,22 @@ namespace pd
         std::lock_guard<std::mutex> guard(m_internal->mutex);
         std::lock_guard<std::mutex> guard2(s_mutex);
         pd_setinstance(m_internal->instance);
-        t_atom av;
-        atom_setfloat(&av, 0);
-        pd_typedmess((t_pd *)gensym("pd")->s_thing, gensym("dsp"), 1, &av);
+        t_sample *tempin = nullptr, *tempout = nullptr;
+        if(m_internal->inputs)
+        {
+            free(m_internal->inputs);
+        }
+        if(m_internal->outputs)
+        {
+            free(m_internal->outputs);
+        }
+        m_internal->inputs = (t_sample *)malloc((size_t)(16 * nsamples) * sizeof(t_sample));
+        memset(m_internal->inputs, 0, (size_t)(nins * nsamples) * sizeof(t_sample));
+        m_internal->outputs = (t_sample *)malloc((size_t)(16 * nsamples) * sizeof(t_sample));
+        memset(m_internal->outputs, 0, (size_t)(nins * nsamples) * sizeof(t_sample));
+        
+        pdinstance_top_dsp(m_internal->instance);
+
         
         if(s_sample_rate != samplerate)
         {
@@ -164,36 +145,62 @@ namespace pd
             sys_reopen_audio();
             s_sample_rate = sys_getsr();
         }
+        tempin  = sys_soundin;
+        tempout = sys_soundout;
+        sys_soundin     = m_internal->inputs;
+        sys_soundout    = m_internal->outputs;
         
-        atom_setfloat(&av, 1);
-        pd_typedmess((t_pd *)gensym("pd")->s_thing, gensym("dsp"), 1, &av);
+        post("prepareDsp start -------------\n");
+        post("prepareDsp instance %ld", (long)m_internal->instance);
+        post("prepareDsp inputs %ld", (long)m_internal->inputs);
+        post("prepareDsp outputs %ld", (long)m_internal->outputs);
+        post("prepareDsp real inputs %ld", (long)tempin);
+        post("prepareDsp real outputs %ld", (long)tempout);
+        
+        pdinstance_start_dsp(m_internal->instance);
+        
+        sys_soundin     = tempin;
+        sys_soundout    = tempout;
+        post("prepareDsp end -------------\n");
+        
     }
     
     void Instance::performDsp(int nsamples, const int nins, const float** inputs, const int nouts, float** outputs) noexcept
     {
-
-        std::lock_guard<std::mutex> guard(m_internal->mutex);
         std::lock_guard<std::mutex> guard2(s_mutex);
-        pd_setinstance(m_internal->instance);
-        
-        for(int i = 0; i < nsamples; i += DEFDACBLKSIZE)
+        std::lock_guard<std::mutex> guard(m_internal->mutex);
+        t_sample* ins = m_internal->inputs;
+        t_sample* outs= m_internal->outputs;
+        const int blksize = sys_getblksize();
+        for(int i = 0; i < nsamples; i += blksize)
         {
             for(int j = 0; j < nins; j++)
             {
-                memcpy(sys_soundin+j*DEFDACBLKSIZE, inputs[j]+i, DEFDACBLKSIZE * sizeof(t_sample));
+                memcpy(ins+j*blksize, inputs[j]+i, blksize * sizeof(t_sample));
             }
-            memset(sys_soundout, 0, DEFDACBLKSIZE * sizeof(t_sample) * nouts);
-            pdinstance_sched_tick(m_internal->instance);
+            memset(outs, 0, blksize * sizeof(t_sample) * nouts);
+            pdinstance_sched_tick(m_internal->instance, (double)blksize, (double)sys_getsr());
             for(int j = 0; j < nouts; j++)
             {
-                memcpy(outputs[j]+i, sys_soundout+j*DEFDACBLKSIZE, DEFDACBLKSIZE * sizeof(t_sample));
+                memcpy(outputs[j]+i, outs+j*blksize, blksize * sizeof(t_sample));
             }
         }
     }
     
     void Instance::releaseDsp() noexcept
     {
-        ;
+        std::lock_guard<std::mutex> guard2(s_mutex);
+        std::lock_guard<std::mutex> guard(m_internal->mutex);
+        if(m_internal->inputs)
+        {
+            //free(m_internal->inputs);
+        }
+        if(m_internal->outputs)
+        {
+            //free(m_internal->outputs);
+        }
+        m_internal->inputs = nullptr;
+        m_internal->outputs = nullptr;
     }
     
     void Instance::addToSearchPath(std::string const& path) noexcept

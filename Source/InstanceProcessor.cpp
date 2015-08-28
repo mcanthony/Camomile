@@ -13,7 +13,7 @@
 
 //==============================================================================
 InstanceProcessor::InstanceProcessor() : Instance(string("camomile")),
-m_patch(Patch(*this, "Test2.pd", "/Users/Pierre/Desktop/"))
+m_patch()
 {
     m_parameters.resize(128);
 }
@@ -95,6 +95,7 @@ bool InstanceProcessor::isMetaParameter(int index) const
 void InstanceProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     lock_guard<mutex> guard(m_mutex);
+    post("prepareToPlay");
     prepareDsp(getNumInputChannels(), getNumOutputChannels(), sampleRate, samplesPerBlock);
 }
 
@@ -186,7 +187,7 @@ void InstanceProcessor::loadPatch(const juce::File& file)
                     }
                 }
             }
-            
+            prepareDsp(getNumInputChannels(), getNumOutputChannels(), getSampleRate(), getBlockSize());
         }
         
         vector<Listener*> listeners = getListeners();

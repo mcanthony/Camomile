@@ -112,6 +112,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mousemove)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mousemove(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -123,6 +124,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mouseenter)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mouseenter(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -134,6 +136,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mouseleave)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mouseleave(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -145,6 +148,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mousedown)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mousedown(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -156,6 +160,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mousedrag)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mousedrag(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -167,6 +172,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mouseup)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mouseup(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -178,6 +184,7 @@ namespace pd
         if(instance && c && c->c_widget.w_dblclick)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_dblclick(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod);
         }
     }
@@ -189,6 +196,7 @@ namespace pd
         if(instance && c && c->c_widget.w_mousewheel)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_mousewheel(getObject(), NULL, t_pt({pos[0], pos[1]}), (long)mod, delta[0], delta[1]);
         }
     }
@@ -234,6 +242,7 @@ namespace pd
         if(instance && c && c->c_widget.w_key)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_key(getObject(), NULL, key, mod);
         }
     }
@@ -245,6 +254,7 @@ namespace pd
         if(instance && c && c->c_widget.w_keyfilter)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             c->c_widget.w_keyfilter(getObject(), NULL, key, mod);
         }
     }
@@ -258,6 +268,7 @@ namespace pd
         if(instance && c && c->c_widget.w_paint && x->b_ready_to_draw)
         {
             std::lock_guard<std::mutex> guard(instance.m_internal->mutex);
+            pd_setinstance(instance.m_internal->instance);
             if(x->b_layers)
             {
                 for(int i = 0; i < x->b_number_of_layers; i++)

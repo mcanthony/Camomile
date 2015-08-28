@@ -9,6 +9,11 @@
 
 #include "m_pd.h"
 
-void pdinstance_sched_tick(t_pdinstance* instance);
+void pdinstance_sched_prepare(t_pdinstance* instance, int nins, int nouts, double blocksize, double samplerate);
+
+void pdinstance_sched_tick(t_pdinstance* instance, double blocksize, double samplerate);
+
+void pdinstance_start_dsp(t_pdinstance* instance);
+void pdinstance_top_dsp(t_pdinstance* instance);
 
 #endif
